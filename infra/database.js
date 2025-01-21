@@ -1,17 +1,16 @@
 import { Client } from "pg";
 
 async function query(queryObject) {
-  
   let client;
   try {
-    client = await getNewClient()
+    client = await getNewClient();
     const result = await client.query(queryObject);
     return result;
   } catch (error) {
     console.error(error);
     throw error;
   } finally {
-    await client.end();
+    client.end();
   }
 }
 
@@ -22,7 +21,7 @@ async function getNewClient() {
     user: process.env.POSTGRES_USER,
     database: process.env.POSTGRES_DB,
     password: process.env.POSTGRES_PASSWORD,
-    ssl: process.env.NODE_ENV === "production" ? true : false,
+    ssl: getSSLValues(),
   });
 
   await client.connect();
@@ -30,7 +29,7 @@ async function getNewClient() {
 }
 
 async function cleanDatabase() {
-  await query("DROP SCHEMA PUBLIC CASCADE; CREATE SCHEMA PUBLIC;")
+  await query("DROP SCHEMA PUBLIC CASCADE; CREATE SCHEMA PUBLIC;");
 }
 
 export default {
@@ -39,3 +38,11 @@ export default {
   cleanDatabase,
 };
 
+function getSSLValues() {
+  if (process.env.POSTGRES_CA) {
+    return {
+      ca: process.env.POSTGRES_CA,
+    };
+  }
+  process.env.NODE_ENV === "production" ? true : false;
+}
